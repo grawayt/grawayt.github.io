@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Grace Waytena</title>
-<meta name="description" content="Grace Waytena — mostly offline.">
+<meta name="description" content="Grace Waytena.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='38' fill='%23e8b4a0'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -58,21 +58,11 @@
     text-shadow: 0 1px 30px rgba(10, 12, 18, 0.8);
     animation: rise 2.2s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
-  .tagline {
-    margin-top: 1.1rem;
-    font-weight: 300;
-    font-size: clamp(0.62rem, 1.6vw, 0.78rem);
-    letter-spacing: 0.42em;
-    text-transform: uppercase;
-    color: rgba(243, 239, 233, 0.62);
-    text-indent: 0.42em; /* balances the trailing letter-spacing */
-    animation: rise 2.2s 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
   nav {
-    margin-top: 2.6rem;
+    margin-top: 2.2rem;
     display: flex;
     gap: 2.2rem;
-    animation: rise 2.2s 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: rise 2.2s 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
   nav a {
     color: rgba(243, 239, 233, 0.55);
@@ -93,7 +83,7 @@
     to   { opacity: 1; transform: translateY(0); }
   }
   @media (prefers-reduced-motion: reduce) {
-    h1, .tagline, nav { animation: none; }
+    h1, nav { animation: none; }
   }
 </style>
 </head>
@@ -104,7 +94,6 @@
 
 <main>
   <h1>Grace Waytena</h1>
-  <p class="tagline">mostly offline</p>
   <nav>
     <a href="mailto:gracewaytena@gmail.com">email</a>
     <a href="https://github.com/grawayt">github</a>
