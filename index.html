@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grace Waytena</title>
+<meta name="description" content="Grace Waytena — mostly offline.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='38' fill='%23e8b4a0'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0a0c12;
+    --cream: #f3efe9;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: var(--ink);
+    color: var(--cream);
+    font-family: 'Inter', system-ui, sans-serif;
+    overflow: hidden;
+  }
+  #art {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  /* soft vignette so the text always reads, whatever the painting does */
+  .veil {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse 55% 42% at 50% 52%,
+                rgba(10, 12, 18, 0.55) 0%,
+                rgba(10, 12, 18, 0.18) 55%,
+                rgba(10, 12, 18, 0) 100%);
+  }
+  main {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+  }
+  h1 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 500;
+    font-size: clamp(2.6rem, 8vw, 5rem);
+    letter-spacing: 0.045em;
+    line-height: 1.1;
+    text-shadow: 0 1px 30px rgba(10, 12, 18, 0.8);
+    animation: rise 2.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .tagline {
+    margin-top: 1.1rem;
+    font-weight: 300;
+    font-size: clamp(0.62rem, 1.6vw, 0.78rem);
+    letter-spacing: 0.42em;
+    text-transform: uppercase;
+    color: rgba(243, 239, 233, 0.62);
+    text-indent: 0.42em; /* balances the trailing letter-spacing */
+    animation: rise 2.2s 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  nav {
+    margin-top: 2.6rem;
+    display: flex;
+    gap: 2.2rem;
+    animation: rise 2.2s 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  nav a {
+    color: rgba(243, 239, 233, 0.55);
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 300;
+    letter-spacing: 0.14em;
+    padding-bottom: 0.2rem;
+    border-bottom: 1px solid transparent;
+    transition: color 0.4s, border-color 0.4s;
+  }
+  nav a:hover {
+    color: var(--cream);
+    border-bottom-color: rgba(243, 239, 233, 0.45);
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    h1, .tagline, nav { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="art"></canvas>
+<div class="veil"></div>
+
+<main>
+  <h1>Grace Waytena</h1>
+  <p class="tagline">mostly offline</p>
+  <nav>
+    <a href="mailto:gracewaytena@gmail.com">email</a>
+    <a href="https://github.com/grawayt">github</a>
+  </nav>
+</main>
+
+<script>
+// ── Flow field painting ──────────────────────────────────────────
+// Hundreds of particles drift through an invisible wind pattern,
+// each leaving a faint luminous thread. The painting accumulates
+// slowly and is different on every visit.
+
+const canvas = document.getElementById('art');
+const ctx = canvas.getContext('2d', { alpha: false });
+
+let W, H, dpr, particles;
+const seed = Math.random() * 1000;
+let t = seed;
+
+// palette: rose · gold · teal · lavender (hue, sat, light, weight)
+const PALETTE = [
+  [351, 64, 72, 3],
+  [ 30, 72, 70, 3],
+  [174, 52, 64, 2],
+  [264, 46, 72, 2],
+];
+
+function pickHue() {
+  const total = PALETTE.reduce((s, p) => s + p[3], 0);
+  let r = Math.random() * total;
+  for (const p of PALETTE) { if ((r -= p[3]) < 0) return p; }
+  return PALETTE[0];
+}
+
+function makeParticle() {
+  const [h, s, l] = pickHue();
+  return {
+    x: Math.random() * W,
+    y: Math.random() * H,
+    h: h + (Math.random() * 14 - 7),
+    s, l,
+    speed: 0.9 + Math.random() * 1.6,
+    life: 0,
+    maxLife: 300 + Math.random() * 500,
+  };
+}
+
+// smooth pseudo-noise from layered waves — enough for wind, no library
+function angle(x, y, time) {
+  const s = 0.0013;
+  let a = Math.sin(x * s * 1.3 + time * 0.11)
+        + Math.cos(y * s * 1.7 - time * 0.09)
+        + Math.sin((x + y) * s * 0.7 + time * 0.05)
+        + Math.cos(Math.hypot(x - W * 0.5, y - H * 0.55) * s * 1.4 - time * 0.04);
+  return a * 1.55;
+}
+
+function resize() {
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth;
+  H = window.innerHeight;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#0a0c12';
+  ctx.fillRect(0, 0, W, H);
+  ctx.lineCap = 'round';
+  const count = Math.min(700, Math.floor(W * H / 1800));
+  particles = Array.from({ length: count }, makeParticle);
+}
+
+function step() {
+  t += 0.016;
+  // breathe: a whisper of background each frame so old strokes
+  // dissolve slowly (half-life ~10s) and the painting keeps evolving
+  ctx.fillStyle = 'rgba(10, 12, 18, 0.0012)';
+  ctx.fillRect(0, 0, W, H);
+
+  for (const p of particles) {
+    const a = angle(p.x, p.y, t);
+    const nx = p.x + Math.cos(a) * p.speed;
+    const ny = p.y + Math.sin(a) * p.speed;
+
+    // fade each thread in and out across its life
+    const phase = Math.sin((p.life / p.maxLife) * Math.PI);
+    ctx.strokeStyle = `hsla(${p.h}, ${Math.min(p.s + 10, 90)}%, ${p.l}%, ${0.28 * phase})`;
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+    ctx.lineTo(nx, ny);
+    ctx.stroke();
+
+    p.x = nx; p.y = ny; p.life++;
+    if (p.life > p.maxLife || nx < -20 || nx > W + 20 || ny < -20 || ny > H + 20) {
+      Object.assign(p, makeParticle());
+    }
+  }
+}
+
+function loop() {
+  step();
+  requestAnimationFrame(loop);
+}
+
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(resize, 150);
+});
+
+resize();
+
+// pre-paint so the page never opens onto a blank canvas
+for (let i = 0; i < 260; i++) step();
+
+if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  // settle into a finished still image instead of animating
+  for (let i = 0; i < 700; i++) step();
+} else {
+  loop();
+}
+</script>
+</body>
+</html>
